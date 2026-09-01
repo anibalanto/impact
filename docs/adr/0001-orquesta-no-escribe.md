@@ -1,6 +1,6 @@
 # ADR-0001: impact — Orquesta, no escribe
 
-**Estado:** Propuesto **Fecha:** 2026-08-31
+**Estado:** Propuesto · **decisión 2 revisada el 2026-09-01** — ver [Revisión](#revisión-la-composición-no-hizo-falta) **Fecha:** 2026-08-31
 
 **Lo dispara** [`bilinker/proposals/cierre-de-firma.md`](../../../../../bilinker/proposals/cierre-de-firma.md), que necesita un compositor: el vecindario de nivel 1 lo calcula lattice, la aceptación la guarda bilinker, y ninguno de los dos puede llamar al otro sin invertir las capas. Este ADR decide quién los compone y con qué límite.
 
@@ -117,3 +117,55 @@ Lo que falta son los verbos: los comandos actuales —`scan`, `report`, `thread`
 - **Accreta como la fachada.** Es el dueño principiado —`overview.md` de impact lo ubica como *"gobierna la resolución del cambio"*, y `bilinker/integration/acreta.md` dice que la aceptación es un acto de gobernanza que accreta puede querer someter a votación. Pero accreta no existe como subsistema, y impact ya consume los dos. Cuando accreta exista, la política de gobernanza se apoya sobre esta orquestación en vez de reemplazarla.
 - **Dejar el flujo en tres invocaciones.** Es el statu quo y no resuelve el problema que dispara el ADR: el vecindario de nivel 1 necesita un compositor, porque ninguno de los dos subsistemas puede llamar al otro. Aun sin la superficie interactiva, el compositor tiene que existir en algún lado.
 - **Un cuarto subsistema sólo para orquestar.** Un lugar nuevo sin nada propio: consumiría lattice y bilinker igual que impact, y duplicaría su Event Collector y su propagación de degradación para no cambiarle una frase a un documento.
+
+---
+
+## Revisión: la composición no hizo falta
+
+**Fecha:** 2026-09-01. Revisa la decisión 2. Las demás quedan como están.
+
+Este ADR supuso que el vecindario de nivel 1 necesitaba un compositor, y de ahí salió que fuera impact. **Apareció información que cambió el problema**, y no es que el argumento se haya aflojado:
+
+| Lo que el ADR supuso | Lo que resultó |
+|---|---|
+| bilinker le preguntaría a **lattice** | le pregunta a **`lspd`**, que no es de nadie |
+| sería **siempre** | es **opt-in por capture**: sólo un fragmento con firma resoluble tiene vecindario |
+| haría falta alguien que componga | **no compone nadie** |
+
+### Por qué la inversión de capas dejó de ocurrir
+
+El argumento contra *"bilinker le pregunta a lattice"* era la inversión: lattice consume bilinker vía `bilinker graph`, y al revés no. Ese argumento era correcto **sobre lattice**.
+
+Pero el daemon nunca fue de lattice: su crate no dependía del crate `lattice`, y lattice le hablaba por un socket como le hablaría cualquiera. Al salir a su propia capa —ver [`subsystems/lspd/`](../../../../../lspd/overview.md)— la figura es otra:
+
+```
+      lattice ──┐
+                ├──►  lspd    (socket)
+     bilinker ──┘
+```
+
+Ningún ciclo, ninguna inversión, y **ningún compositor**: cada uno pide lo que necesita.
+
+### Y la degradación quedó acotada
+
+La otra mitad del argumento era concreta y sigue valiendo: *"un `check` que necesita un language server indexando queda condicionalmente degradado, y eso contamina el subsistema entero por un campo"*.
+
+**No lo contamina, porque el campo se pide y no se supone.** Bilinker define un puerto —`Neighbours`— que no nombra a nadie, y la librería no depende de `lspd`: sólo el binario elige quién lo implementa. Sin daemon, `check` corre igual y los endpoints con vecindario aceptado quedan en `CONTRACT_UNVERIFIED`, que **no hace fallar**. Un repo sin language server ve exactamente lo que veía antes.
+
+O sea que lo que este ADR protegía —que bilinker funcione solo, offline, en cualquier repo— se conservó, y por un mecanismo más barato que un compositor.
+
+### Qué queda en pie de la decisión 2
+
+Todo lo que era sobre **el reparto de escritura**:
+
+- Bilinker recibe ubicaciones y no sale a buscarlas con conocimiento propio de tipos: quien resuelve entra por el puerto.
+- El hasheo y el fold son de bilinker, porque el recorte de bordes es su regla.
+- Los dos campos son valores opacos que guarda y compara sin poder derivar.
+- **Un campo, un escritor**: `accept` sigue siendo el único que escribe `accepted`.
+- *No verificado* es el estado, y salió con el nombre `CONTRACT_UNVERIFIED`.
+
+Lo único que se cae es **quién compone**, porque no hay nada que componer.
+
+### Lo que esto le deja a impact
+
+Nada menos de lo que tenía, y una cosa menos que hacer. El principio *"orquesta, no escribe"* sigue siendo el correcto para la superficie interactiva de la decisión 3 —recorrer, profundizar, y aceptar al final del recorrido—, que es lo que motivaba el cambio de principio y no depende de esto.
