@@ -107,9 +107,9 @@ Los elementos de impacto declaran la gobernanza upfront, no post-hoc.
 
 Toda evaluación parte de diffs, commits y hashes concretos.
 
-### No invasivo
+### Orquesta, no escribe
 
-No modifica código ni specs, solo lee y reporta.
+Puede invocar a las herramientas dueñas de cada formato —bilinker, lattice—, y no escribe sus archivos ni parsea sus formatos.
 
 ### Componible
 
