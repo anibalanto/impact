@@ -45,6 +45,18 @@ lattice graph <F> --up --via bilink,governs,call --format json
 
 Esto alcanza también las specs que gobiernan funciones que *llaman* al código modificado, no solo las que lo referencian directamente. Esas aristas llegan con `guarantee: derived` y el reporte debe distinguirlas de las `accepted`: ver [el Impact Report](impact-report.md#un-impact-report-no-presenta-una-inferencia-del-lsp-como-si-fuera-un-vínculo-verificado).
 
+Esa consulta para en la primera arista `accepted`: llega a la spec que gobierna al llamador, y no sigue del otro lado.
+
+### Los flujos que toca un cambio salen de cruzar lo documentado
+
+Cuando lo afectado está varios bilinks más allá —de un servicio del back al endpoint que lo llama, de ahí al servicio del front, al componente que lo llama y al flujo funcional que documenta ese componente—, la consulta es el recorrido de impacto de lattice:
+
+```
+lattice graph <F>:<línea>:<col> --up --cross --format json
+```
+
+Lattice expande el call graph en cada nodo que alcanza, cruza las aristas `accepted` y sigue del otro lado, con un tope de profundidad. Impact no recorre la cadena ni habla con los language servers: recibe las aristas alcanzadas, con su `guarantee`, y el reporte distingue las `derived` de las `accepted` igual que en el blast radius por llamadas.
+
 ## Uso
 
 ### El blast radius aparece en el Impact Report como la lista de cadenas afectadas

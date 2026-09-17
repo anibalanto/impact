@@ -93,6 +93,7 @@ Impact consulta el grafo del proyecto a través de lattice en vez de recorrer lo
 | ¿Qué documentos gobiernan este vínculo? | `lattice graph <uuid> --via governs` |
 | ¿Cuál es el blast radius de este cambio? | `lattice graph <archivo> --both --guarantee accepted` |
 | ¿Qué specs alcanza el cambio subiendo por llamadas? | `lattice graph <archivo> --up --via bilink,governs,call` |
+| ¿Qué flujos toca el cambio, varios bilinks más allá? | `lattice graph <archivo>:<línea>:<col> --up --cross` |
 | ¿Cuál es el baseline para el diff? | el campo `commit` de la arista alcanzada |
 
 Todas devuelven aristas con `kind`, `guarantee`, `state` y `commit`, como las define la spec de lattice para sus aristas.
